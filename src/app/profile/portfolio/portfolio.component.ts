@@ -76,18 +76,16 @@ export class PortfolioComponent implements OnInit {
     );
     forkJoin(request)
       .pipe(
-        catchError(() => of(false)),
         finalize(() => {
           this.loading = false;
         })
       )
       .subscribe((responses) => {
-        if (responses === false) {
-          this.error = 'Error while loading gallery.';
-          return;
-        }
         this.photos.push(...photos);
         (responses as any[]).forEach((resp, index) => {
+          if (resp === false) {
+            return;
+          }
           this.photos[this.photos.length - length + index].file = new File(
             [resp],
             ''

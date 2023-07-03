@@ -1,6 +1,6 @@
 import { HttpBackend, HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, from, map, switchMap } from 'rxjs';
+import { Observable, catchError, from, map, of, switchMap } from 'rxjs';
 import { NgxImageCompressService } from 'ngx-image-compress';
 import { maxNormalSize } from '../models/photo.model';
 
@@ -44,7 +44,11 @@ export class MinioService {
   }
 
   getPhoto(url: string): Observable<any> {
-    return this.http.get(url, { responseType: 'blob' });
+    return this.http.get(url, { responseType: 'blob' }).pipe(
+      catchError(() => {
+        return of(false);
+      })
+    );
   }
 
   dataURItoBlob(dataURI: string): File {

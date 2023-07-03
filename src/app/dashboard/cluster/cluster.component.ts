@@ -103,18 +103,17 @@ export class ClusterComponent implements OnInit, AfterViewInit {
     );
     forkJoin(request)
       .pipe(
-        catchError(() => of(false)),
         finalize(() => {
           this.clusterLoadedFirstTime.emit();
           this.loading = false;
         })
       )
       .subscribe((responses) => {
-        if (responses === false) {
-          return;
-        }
         this.photos.push(...photos);
         (responses as any[]).forEach((resp, index) => {
+          if (resp === false) {
+            return;
+          }
           this.photos[this.photos.length - length + index].file = new File(
             [resp],
             ''
