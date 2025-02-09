@@ -131,6 +131,8 @@ export class ClusterComponent implements OnInit, AfterViewInit {
         const objectUrl = URL.createObjectURL(result.blob);
         updatedPhotos[photoIndex].file = new File([result.blob], '');
         updatedPhotos[photoIndex].url = objectUrl;
+
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
   
         try {
           const compressed = await this.imageCompress.compressFile(
