@@ -42,6 +42,7 @@ export class ClusterComponent implements OnInit, AfterViewInit {
   error = false;
   loading = true;
   next?: string;
+  private observer!: IntersectionObserver;
 
   constructor(
     private photoService: PhotoService,
@@ -67,6 +68,9 @@ export class ClusterComponent implements OnInit, AfterViewInit {
       this.cluster.position.x + 'px';
     (this.clusterElement!.nativeElement as HTMLElement).style.top =
       this.cluster.position.y + 'px';
+
+    // Initialize Intersection Observer for lazy loading
+    this.initLazyLoading();
   }
 
   resetValues(): void {
@@ -138,6 +142,9 @@ export class ClusterComponent implements OnInit, AfterViewInit {
               )
             );
         });
+
+        // Apply Intersection Observer after all images are fetched
+        this.applyLazyLoading();
       });
   }
 
@@ -167,5 +174,35 @@ export class ClusterComponent implements OnInit, AfterViewInit {
 
   sanitizeUrl(url: string): string {
     return this.sanitizer.bypassSecurityTrustUrl(url) as string;
+  }
+
+  private initLazyLoading(): void {
+    this.observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+  
+          const img = entry.target as HTMLImageElement;
+          const dataSrc = img.getAttribute('data-src');
+          console.log("Image intersecting...",);
+  
+          if (dataSrc) {
+            img.src = dataSrc;
+            img.classList.remove('lazy-load');
+            this.observer.unobserve(img); // Stop observing once loaded
+          } else {
+            console.error("Lazy loading error: data-src is missing!", img);
+          }
+        }
+      });
+    }, {
+      root: null, // Observe against viewport
+      rootMargin: '100px', // Preload images slightly before they appear
+      threshold: 0.1, // Load when 10% of the image is visible
+    });
+  }
+
+  /** Apply lazy loading to images after they are added to the DOM */
+  private applyLazyLoading(): void {
+    document.querySelectorAll('.lazy-load').forEach((img) => this.observer.observe(img));
   }
 }

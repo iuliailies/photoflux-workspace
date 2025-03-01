@@ -38,8 +38,8 @@
           [hidden]="!focused && i > 2"
         >
           <img
-            [src]="photo.compressedUrl!"
-            class="photo-elem"
+            [attr.data-src]="photo.compressedUrl"
+            class="photo-elem lazy-load"
             alt=""
             (click)="openPhotoModal(photo)"
           />
