@@ -182,16 +182,15 @@ export class ClusterComponent implements OnInit, AfterViewInit {
         if (entry.isIntersecting) {
   
           const img = entry.target as HTMLImageElement;
-          const dataSrc = img.getAttribute('data-src');
-          console.log("Image intersecting...",);
+          const dataSrc = img.getAttribute('data-src')
+          const src = img.getAttribute('src')
   
-          if (dataSrc) {
+          if (dataSrc && !src) {
+            console.log("Image intersecting...");
             img.src = dataSrc;
             img.classList.remove('lazy-load');
             this.observer.unobserve(img); // Stop observing once loaded
-          } else {
-            console.error("Lazy loading error: data-src is missing!", img);
-          }
+          } 
         }
       });
     }, {
