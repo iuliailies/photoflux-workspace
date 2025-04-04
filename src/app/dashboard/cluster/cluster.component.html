@@ -38,7 +38,7 @@
           [hidden]="!focused && i > 2"
         >
           <img
-            [src]="photo.compressedUrl!"
+            [src]="focused && photo.url ? photo.url! : photo.compressedUrl!"
             class="photo-elem"
             alt=""
             (click)="openPhotoModal(photo)"

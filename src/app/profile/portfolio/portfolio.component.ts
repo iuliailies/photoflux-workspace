@@ -121,19 +121,7 @@ export class PortfolioComponent implements OnInit {
     modalRef.result.then(
       (resp: Photo) => {
         resp.url = this.sanitizeUrl(URL.createObjectURL(resp.file!));
-        this.imageCompress
-          .compressFile(
-            URL.createObjectURL(resp.file!),
-            -1,
-            undefined,
-            50,
-            maxCompressedSize,
-            maxCompressedSize
-          )
-          .then((result) => {
-            resp.compressedUrl = result;
-            this.photos.unshift(resp);
-          });
+        this.photos.unshift(resp);
         this.toastService.showToast(TOAST_STATE.success, [
           { toastMessage: `<div>Photo successfully uploaded.</div>` },
         ]);

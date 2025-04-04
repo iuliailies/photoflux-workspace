@@ -6,6 +6,7 @@ import {
   Input,
   OnInit,
   Output,
+  SimpleChanges,
   ViewChild,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -21,7 +22,6 @@ import { Photo, maxCompressedSize } from 'src/app/shared/models/photo.model';
 import { MinioService } from 'src/app/shared/services/minio.service';
 import { PhotoService } from 'src/app/shared/services/photo.service';
 import { StarService } from 'src/app/shared/services/star.service';
-import { NgxImageCompressService } from 'ngx-image-compress';
 
 @Component({
   selector: 'app-cluster',
@@ -42,6 +42,7 @@ export class ClusterComponent implements OnInit, AfterViewInit {
   error = false;
   loading = true;
   next?: string;
+  focusedOnce = false
 
   constructor(
     private photoService: PhotoService,
@@ -50,7 +51,6 @@ export class ClusterComponent implements OnInit, AfterViewInit {
     private sanitizer: DomSanitizer,
     private toastService: ToastService,
     private modalService: ModalService,
-    private imageCompress: NgxImageCompressService
   ) {}
 
   ngOnInit(): void {
@@ -69,6 +69,21 @@ export class ClusterComponent implements OnInit, AfterViewInit {
       this.cluster.position.y + 'px';
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['focused']) {
+      const currentValue = changes['focused'].currentValue;
+      const previousValue = changes['focused'].previousValue;
+
+      if (previousValue !== undefined && currentValue !== previousValue && !this.focusedOnce) {
+        setTimeout(() => {
+          this.focusedOnce = true
+        })
+        this.listPhotos()
+      }
+    }
+  }
+
+
   resetValues(): void {
     this.next = undefined;
     this.photos = [];
@@ -76,12 +91,12 @@ export class ClusterComponent implements OnInit, AfterViewInit {
   }
 
   listPhotos(): void {
-    if (this.next == '') {
+    if (this.next == '' && this.focusedOnce) {
       return;
     }
     this.loading = true;
     this.photoService
-      .listPhotos(this.cluster.categoryIds, this.sortType, this.next)
+      .listPhotos(this.cluster.categoryIds, this.sortType, this.focusedOnce ? this.next : undefined)
       .subscribe(
         (resp) => {
           this.categoryName = resp.categoryName;
@@ -99,7 +114,7 @@ export class ClusterComponent implements OnInit, AfterViewInit {
     const length = photos.length;
     // TODO: improve, move minio interaction into the service
     const request = photos.map((photo) =>
-      this.minioService.getPhoto(photo.href)
+      this.minioService.getPhoto(this.focusedOnce ? photo.href : photo.href_thumbnail)
     );
     forkJoin(request)
       .pipe(
@@ -109,34 +124,20 @@ export class ClusterComponent implements OnInit, AfterViewInit {
         })
       )
       .subscribe((responses) => {
-        this.photos.push(...photos);
+        // make sure to not overwrite already existing photos right after focus
+        if(!this.focusedOnce || !(this.photos.length && !this.photos[0].url)) 
+          this.photos.push(...photos);
         (responses as any[]).forEach((resp, index) => {
           if (resp === false) {
             return;
           }
-          this.photos[this.photos.length - length + index].file = new File(
-            [resp],
-            ''
-          );
-          this.imageCompress
-            .compressFile(
-              URL.createObjectURL(resp),
-              -1,
-              undefined,
-              50,
-              maxCompressedSize,
-              maxCompressedSize
-            )
-            .then((result) => {
-              this.photos[this.photos.length - length + index].compressedUrl =
-                result;
-            });
-          this.photos[this.photos.length - length + index].url =
-            this.sanitizeUrl(
-              URL.createObjectURL(
-                this.photos[this.photos.length - length + index].file!
-              )
-            );
+          const respFile = new File([resp], '');
+          this.photos[this.photos.length - length + index].file = respFile
+          if (!this.focusedOnce) {
+            this.photos[this.photos.length - length + index].compressedUrl = this.sanitizeUrl(URL.createObjectURL(respFile));
+          } else {
+            this.photos[this.photos.length - length + index].url = this.sanitizeUrl(URL.createObjectURL(respFile));
+          }
         });
       });
   }
