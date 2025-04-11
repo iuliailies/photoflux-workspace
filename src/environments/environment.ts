@@ -6,7 +6,7 @@ export const environment = {
   production: false,
   // apiURL: 'http://localhost:8033/api',
   // apiURL: 'http://backendpf.services.ozoniuss.com/api',
-  apiURL: 'http://192.168.0.108:8033/api',
+  apiURL: 'http://192.168.0.100:8033/api',
 
 };
 

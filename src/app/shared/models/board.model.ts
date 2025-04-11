@@ -51,7 +51,10 @@ export class Board {
   }
 
   get clusters(): Cluster[] {
-    return this.attributes.data;
+    // return this.attributes.data;
+
+    // replicate larger amount of data
+    return this.attributes.data.flatMap(cluster => Array(5).fill(cluster));
   }
 
   set clusters(clusters: Cluster[]) {
