@@ -51,5 +51,18 @@
       [sortTypeChangedSubject]="sortTypeChangedSubject"
       (clusterLoadedFirstTime)="boardsLoaded = boardsLoaded + 1"
     ></app-cluster>
+  
+    <!-- Repeat each cluster 4 more times -->
+    <ng-container *ngFor="let cluster of board.clusters; let i = index">
+      <ng-container *ngFor="let repeat of [1,2,3,4]">
+        <app-cluster
+          [hidden]="boardsLoaded < board.categoryNames.length"
+          [cluster]="cluster"
+          [focused]="focusedCluster === i"
+          [sortTypeChangedSubject]="sortTypeChangedSubject"
+          (clusterLoadedFirstTime)="boardsLoaded = boardsLoaded + 1"
+        ></app-cluster>
+      </ng-container>
+    </ng-container>
   </div>
 </div>
