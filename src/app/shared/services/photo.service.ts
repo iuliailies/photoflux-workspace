@@ -9,6 +9,7 @@ import {
   Photo,
   Photos,
   PhotosPerCategory,
+  maxCompressedSize,
 } from '../models/photo.model';
 import {
   generateNewPhoto,
@@ -16,6 +17,8 @@ import {
 } from '../helpers/photo.helpers';
 import { MinioService } from './minio.service';
 import { PAGINATION } from '../models/params.model';
+import { NgxImageCompressService } from 'ngx-image-compress';
+import { base64ToFile } from '../helpers/base64ToFile';
 
 @Injectable({
   providedIn: 'root',
@@ -23,27 +26,37 @@ import { PAGINATION } from '../models/params.model';
 export class PhotoService {
   private requestURL = 'photos/';
 
-  constructor(private http: HttpClient, private minio: MinioService) {}
+  constructor(private http: HttpClient, private minio: MinioService, private imageCompress: NgxImageCompressService) {}
 
   uploadPhoto(categoryIds: string[], photo: File): Observable<Photo> {
     const request: CreatePhotoRequest = {
       category_ids: categoryIds,
     };
     let uploadedPhoto: Photo;
-    return this.http
-      .post<CreatePhotoResponse>(this.requestURL, request)
-      .pipe(
-        mergeMap((resp) => {
-          uploadedPhoto = generateNewPhoto(resp);
-          return this.minio.uploadPhoto(resp.data.meta.href, photo);
-        })
-      )
-      .pipe(
-        map((resp) => {
-          uploadedPhoto.file = resp;
-          return uploadedPhoto;
-        })
-      );
+  
+    return this.http.post<CreatePhotoResponse>(this.requestURL, request).pipe(
+      mergeMap(async (resp) => {
+        uploadedPhoto = generateNewPhoto(resp);
+        await this.minio.uploadPhoto(resp.data.meta.href, photo).toPromise();
+
+        const compressedBase64 = await this.imageCompress.compressFile(
+          URL.createObjectURL(photo),
+          -1,
+          undefined,
+          50,
+          maxCompressedSize,
+          maxCompressedSize
+        );
+  
+        const thumbnailFile = base64ToFile(compressedBase64, 'thumbnail_' + photo.name);
+        uploadedPhoto.compressedUrl = compressedBase64
+        uploadedPhoto.file = thumbnailFile
+        await this.minio.uploadPhoto(resp.data.meta.href_thumbnail, thumbnailFile).toPromise();
+  
+        return uploadedPhoto;
+      }),
+      map((uploadedPhoto) => uploadedPhoto)
+    );
   }
 
   listMyPhotos(next?: string): Observable<Photos> {

@@ -8,7 +8,7 @@
   #profile
 >
   <div class="flex-container">
-    <app-portfolio [hidden]="!isPortfolioOpen"></app-portfolio>
+    <!-- <app-portfolio [hidden]="!isPortfolioOpen"></app-portfolio> -->
     <app-boards [hidden]="!isBoardsOpen" (closeMe)="closeBoards()"></app-boards>
     <div class="expandable" (mousedown)="resize($event)"></div>
   </div>

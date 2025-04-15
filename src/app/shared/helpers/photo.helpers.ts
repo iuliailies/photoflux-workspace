@@ -11,6 +11,7 @@ export const generateNewPhoto = (resp: CreatePhotoResponse): Photo => {
     resp.data.meta.number_stars,
     false, // photo is definetely not starred right when created
     resp.data.meta.href,
+    resp.data.meta.href_thumbnail,
     resp.data.relationships.categories.data.map((data) => data.id)
   );
 
@@ -26,6 +27,7 @@ export const generateNewPhotoFromListItem = (
     resp.meta.number_stars,
     resp.meta.starred_by_user,
     resp.meta.href,
+    resp.meta.href_thumbnail,
     []
   );
 

@@ -16,6 +16,7 @@ export class Photo {
     public numberStars: number,
     public starred: boolean,
     public href: string,
+    public href_thumbnail: string,
     public categories: string[]
   ) {
     // default url, to avoid unpleasing visuals in case the image takes a bit of time to load
@@ -91,6 +92,7 @@ export interface PhotoListItemData extends ResourceID, SelfLink {
 export interface PhotoMeta {
   number_stars: number;
   href: string;
+  href_thumbnail: string;
   starred_by_user: boolean;
 }
 
